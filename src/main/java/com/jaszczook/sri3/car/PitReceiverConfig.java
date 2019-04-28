@@ -6,6 +6,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
+import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
+import org.springframework.jms.support.converter.MessageConverter;
+import org.springframework.jms.support.converter.MessageType;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @EnableJms
@@ -27,7 +33,21 @@ public class PitReceiverConfig {
 	public DefaultJmsListenerContainerFactory jmsListenerContainerFactory() {
 		DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
 		factory.setConnectionFactory(receiverActiveMQConnectionFactory());
+		factory.setMessageConverter(receiverJacksonJmsMessageConverter());
 
 		return factory;
+	}
+
+	@Bean
+	public MessageConverter receiverJacksonJmsMessageConverter() {
+		MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
+		Map<String, Class<?>> typeIdMappings = new HashMap<>();
+		typeIdMappings.put("CAR_DATA_TYPE", CarData.class);
+
+		converter.setTypeIdMappings(typeIdMappings);
+		converter.setTargetType(MessageType.TEXT);
+		converter.setTypeIdPropertyName("CAR_DATA_TYPE");
+
+		return converter;
 	}
 }
